@@ -186,15 +186,6 @@ def show_cmatrix(ytest, pred):
     plt.ylabel('True Class');
 
 
-def show_feature_importance(model):
-  feat_importances = pd.Series(model.feature_importances_, index=X.columns)
-  ax = feat_importances.nlargest(20).plot(kind='barh', figsize=(10, 8))
-  ax.invert_yaxis()
-
-  plt.xlabel('score')
-  plt.ylabel('feature')
-  plt.title('feature importance score')
-
 #%%
 print('\n____________ Logistic Regression ____________')
 lr = LogisticRegression()
@@ -233,6 +224,8 @@ precision_knn = precision_score(y_test, y_pred_knn)
 f1_knn = f1_score(y_test, y_pred_knn)
 acc_knn_train = knn.score(X_train, y_train)
 
+#%%
+
 print('\n____________ Decision Tree Classifier ____________')
 dt_model = DecisionTreeClassifier()
 dt_model.fit(X_train,y_train)
@@ -251,6 +244,8 @@ f1_dt = f1_score(y_test, y_pred_dt)
 acc_dt_train = dt_model.score(X_train, y_train)
 
 show_cmatrix(y_test,y_pred_dt)
+
+#%%
 print('\n____________ Random Forest Classifier ____________')
 rf_model = RandomForestClassifier()
 rf_model.fit(X_train,y_train)
@@ -269,6 +264,8 @@ acc_rf_train = rf_model.score(X_train, y_train)
 
 show_cmatrix(y_test, y_pred_rf)
 
+#%%
+
 print('\n____________ Gradient Boosting Classifier ____________')
 gb = GradientBoostingClassifier()
 gb.fit(X_train, y_train)
@@ -282,6 +279,10 @@ acc_gb = accuracy_score(y_test, y_pred_gb)
 precision_gb = precision_score(y_test, y_pred_gb)
 f1_gb = f1_score(y_test, y_pred_gb)
 acc_gb_train = gb.score(X_train, y_train)
+
+show_cmatrix(y_test, y_pred_gb)
+
+#%%
 
 
 evaluation_summary = {
@@ -297,56 +298,11 @@ eva_sum
 
 # tính toán accuracy của train và test
 evaluation_sum_train_test = {
-    "Train" : [acc_lr_train, acc_knn_train, acc_dt_train, acc_rf_train, acc_xg_train],
-    "Test": [acc_lr, acc_knn, acc_dt, acc_rf, acc_xg]
+    "Train" : [acc_lr_train, acc_knn_train, acc_dt_train, acc_rf_train, acc_gb_train],
+    "Test": [acc_lr, acc_knn, acc_dt, acc_rf, acc_gb]
 }
 
-eva_sum_train_test = pd.DataFrame(data = evaluation_sum_train_test, index = ['Logistic Regression', 'KNN', 'Decision Tree', 'Random Forest', 'XGBoost'])
+eva_sum_train_test = pd.DataFrame(data = evaluation_sum_train_test, index = ['Logistic Regression', 'KNN', 'Decision Tree', 'Random Forest', 'Gradient Boosting'])
 eva_sum_train_test
 
-
-
-#%%
-print('\n____________ Tuned Modelling ____________')
-
-#%%
-print('\n____________ Logistic Regression Tuned ____________')
-from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
-
-penalty = ['l2','l1','elasticnet']
-C = [0.0001, 0.001, 0.002] # Inverse of regularization strength; smaller values specify stronger regularization.
-hyperparameters = dict(penalty=penalty, C=C)
-
-lr_tuned = LogisticRegression()
-lr_tuned_model = RandomizedSearchCV(lr_tuned, hyperparameters, cv=5, scoring='accuracy')
-lr_tuned_model.fit(X_train, y_train)
-
-y_pred_lr_tuned = lr_tuned_model.predict(X_test)
-
-show_best_hyperparameter(lr_tuned_model.best_estimator_, hyperparameters)
-
-eval_prediction(lr_tuned_model, y_pred_lr_tuned, X_train, y_train, X_test, y_test)
-
-print('Train score: ' + str(lr_tuned_model.score(X_train, y_train))) #accuracy
-print('Test score:' + str(lr_tuned_model.score(X_test, y_test))) #accuracy
-
-recall_lr_tuned = recall_score(y_test, y_pred_lr_tuned)
-acc_lr_tuned = accuracy_score(y_test, y_pred_lr_tuned)
-precision_lr_tuned = precision_score(y_test, y_pred_lr_tuned)
-f1_lr_tuned = f1_score(y_test, y_pred_lr_tuned)
-acc_lr_tuned_train = lr_tuned_model.score(X_train, y_train)
-
-#%%
-print('\n____________ KNeighborsClassifier ____________')
-
-
-#%%
-print('\n____________ Decision Tree Classifier ____________')
-
-
-#%%
-print('\n____________ Random Forest Classifier ____________')
-
-#%%
-print('\n____________ Gradient Boosting Classifier ____________')
 
