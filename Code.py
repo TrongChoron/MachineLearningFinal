@@ -4,9 +4,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import missingno as msno
-import folium
-from folium.plugins import HeatMap
 import seaborn as sns
 import plotly.express as px 
 
@@ -43,105 +40,18 @@ null
 # filling null values with zero
 print('\n____________ Filling Null Values With Zero ____________')
 df.fillna(0, inplace = True)
-# visualizing null values
-print('\n____________ Visualizing Null Values ____________')
-msno.bar(df)
-plt.show()
+
 # adults, babies and children cant be zero at same time, so dropping the rows having all these zero at same time
 # Filter tất cả các giá trị không phù hợp
 filter = (df.children == 0) & (df.adults == 0) & (df.babies == 0)
 df[filter]
 df = df[~filter]
 df
-# %%
-print('\n____________ Exploratory Data Analysis (EDA) ____________')
-print('\n____________ From where the most guests are coming ? ____________')
-country_wise_guests = df[df['is_canceled'] == 0]['country'].value_counts().reset_index()
-country_wise_guests.columns = ['country', 'No of guests']
-country_wise_guests
-
-basemap = folium.Map()
-guests_map = px.choropleth(country_wise_guests, locations = country_wise_guests['country'],
-                           color = country_wise_guests['No of guests'], hover_name = country_wise_guests['country'])
-guests_map.show()
-#%%
-# People from all over the world are staying in these two hotels. Most guests are from Portugal and other countries in Europe
-print('\n____________ How much do guests pay for a room per night? ____________')
-df.head()
-# Both hotels have different room types and different meal arrangements.Seasonal factors are also important, So the prices varies a lot.
-data = df[df['is_canceled'] == 0]
-
-px.box(data_frame = data, x = 'reserved_room_type', y = 'adr', color = 'hotel', template = 'plotly_dark')
-# The figure shows that the average price per room depends on its type and the standard deviation.
-print('\n____________ How does the price vary per night over the year? ____________')
-data_resort = df[(df['hotel'] == 'Resort Hotel') & (df['is_canceled'] == 0)]
-data_city = df[(df['hotel'] == 'City Hotel') & (df['is_canceled'] == 0)]
-resort_hotel = data_resort.groupby(['arrival_date_month'])['adr'].mean().reset_index()
-resort_hotel
-city_hotel=data_city.groupby(['arrival_date_month'])['adr'].mean().reset_index()
-city_hotel
-final_hotel = resort_hotel.merge(city_hotel, on = 'arrival_date_month')
-final_hotel.columns = ['month', 'price_for_resort', 'price_for_city_hotel']
-final_hotel
-# So, first we have to provide right hierarchy to month column.
-import sort_dataframeby_monthorweek as sd
-
-def sort_month(df, column_name):
-    return sd.Sort_Dataframeby_Month(df, column_name)
-
-final_prices = sort_month(final_hotel, 'month')
-final_prices
-
-plt.figure(figsize = (17, 8))
-
-px.line(final_prices, x = 'month', y = ['price_for_resort','price_for_city_hotel'],
-        title = 'Room price per night over the Months', template = 'plotly_dark')
-
-#%%
-# Biểu đồ này cho thấy rõ ràng rằng giá cả ở Khách sạn Resort cao hơn nhiều vào mùa hè và giá của khách sạn thành phố thay đổi ít hơn và đắt nhất là vào mùa Xuân và Thu.
-
-print('\n____________ Which are the most busy months? ____________')
-resort_guests = data_resort['arrival_date_month'].value_counts().reset_index()
-resort_guests.columns=['month','no of guests']
-resort_guests
-
-city_guests = data_city['arrival_date_month'].value_counts().reset_index()
-city_guests.columns=['month','no of guests']
-city_guests
-
-final_guests = resort_guests.merge(city_guests,on='month')
-final_guests.columns=['month','no of guests in resort','no of guest in city hotel']
-final_guests
-
-final_guests = sort_month(final_guests,'month')
-final_guests
-
-px.line(final_guests, x = 'month', y = ['no of guests in resort','no of guest in city hotel'],
-        title='Total no of guests per Months', template = 'plotly_dark')
-
-# City Hotel có nhiều khách hơn vào mùa xuân và mùa thu, khi giá cả cũng cao nhất, vào tháng 7 và tháng 8 thì ít khách hơn, mặc dù giá có thấp hơn.
-# Số lượng khách cho Resort Hotel giảm nhẹ từ tháng 6 đến tháng 9, cũng là lúc giá cao nhất. Cả hai khách sạn đều có ít khách nhất trong mùa đông.
-
-# %%
-print('\n____________ How long do people stay at the hotels? ____________')
-filter = df['is_canceled'] == 0
-data = df[filter]
-data.head()
-
-data['total_nights'] = data['stays_in_weekend_nights'] + data['stays_in_week_nights']
-data.head()
-
-stay = data.groupby(['total_nights', 'hotel']).agg('count').reset_index()
-stay = stay.iloc[:, :3]
-stay = stay.rename(columns={'is_canceled':'Number of stays'})
-stay
-
-px.bar(data_frame = stay, x = 'total_nights', y = 'Number of stays', color = 'hotel', barmode = 'group',
-        template = 'plotly_dark')
 
 #%%
 
 print('\n____________ Data Pre Processing ____________')
+
 plt.figure(figsize = (24, 12))
 
 corr = df.corr()
