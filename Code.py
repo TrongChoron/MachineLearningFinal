@@ -1,5 +1,12 @@
 
-# https://www.kaggle.com/code/niteshyadav3103/hotel-booking-prediction-99-5-acc/notebook
+'''
+The dataset get from Kaggle
+https://www.kaggle.com/datasets/mojtaba142/hotel-booking?datasetId=1437463&searchQuery=predict
+
+The following code is mainly from Kaggle
+https://www.kaggle.com/code/niteshyadav3103/hotel-booking-prediction-99-5-acc/notebook
+
+'''
 #%%
 # importing libraries
 
