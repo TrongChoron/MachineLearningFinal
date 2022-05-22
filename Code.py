@@ -1,3 +1,5 @@
+
+# https://www.kaggle.com/code/niteshyadav3103/hotel-booking-prediction-99-5-acc/notebook
 #%%
 # importing libraries
 
@@ -12,7 +14,8 @@ warnings.filterwarnings('ignore')
 
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, precision_score, recall_score, f1_score
+from sklearn.metrics import roc_curve, auc
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -147,21 +150,68 @@ X_test.head()
 y_train.head(), y_test.head()
 
 #%%
-print('\n____________ Model Building ____________')
-print('\n____________ Logistic Regression ____________')
+print('\n____________ Model Building  New ____________')
 
+# precision dc tính theo cong thức F1 = 2 * (precision * recall) / (precision + recall)
+
+def eval_prediction(model, pred, x_train, y_train, x_test, y_test):
+
+    print("Accuracy (Test Set): %.2f" % accuracy_score(y_test, pred))
+    print("Precision (Test Set): %.2f" % precision_score(y_test, pred))
+    print("Recall (Test Set): %.2f" % recall_score(y_test, pred))
+    print("F1-Score (Test Set): %.2f" % f1_score(y_test, pred))
+    
+    fpr, tpr, thresholds = roc_curve(y_test, pred, pos_label=1) # pos_label: label yang kita anggap positive
+    print("AUC: %.2f" % auc(fpr, tpr))
+
+def show_best_hyperparameter(model, hyperparameters):
+    for key, value in hyperparameters.items() :
+        print('Best '+key+':', model.get_params()[key])
+
+def show_cmatrix(ytest, pred):
+    # Creating confusion matrix 
+    cm = confusion_matrix(ytest, pred)
+
+    # Putting the matrix a dataframe form  
+    cm_df = pd.DataFrame(cm, index=['Actually Not Canceled', 'Actually Canceled'],
+                 columns=['Predicted Not Canceled', 'Predicted Canceled'])
+    
+    # visualizing the confusion matrix
+    sns.set(font_scale=1.2)
+    plt.figure(figsize=(10,4))
+        
+    sns.heatmap(cm, annot=True, fmt='g', cmap="Blues",xticklabels=cm_df.columns, yticklabels=cm_df.index, annot_kws={"size": 20})
+    plt.title("Confusion Matrix", size=20)
+    plt.xlabel('Predicted Class')
+    plt.ylabel('True Class');
+
+
+def show_feature_importance(model):
+  feat_importances = pd.Series(model.feature_importances_, index=X.columns)
+  ax = feat_importances.nlargest(20).plot(kind='barh', figsize=(10, 8))
+  ax.invert_yaxis()
+
+  plt.xlabel('score')
+  plt.ylabel('feature')
+  plt.title('feature importance score')
+
+#%%
+print('\n____________ Logistic Regression ____________')
 lr = LogisticRegression()
 lr.fit(X_train, y_train)
-
 y_pred_lr = lr.predict(X_test)
+eval_prediction(lr, y_pred_lr, X_train, y_train, X_test, y_test)
 
+print('Train score: ' + str(lr.score(X_train, y_train))) #accuracy
+print('Test score:' + str(lr.score(X_test, y_test))) #accuracy
+
+recall_lr = recall_score(y_test, y_pred_lr)
 acc_lr = accuracy_score(y_test, y_pred_lr)
-conf = confusion_matrix(y_test, y_pred_lr)
-clf_report = classification_report(y_test, y_pred_lr)
+precision_lr = precision_score(y_test, y_pred_lr)
+f1_lr = f1_score(y_test, y_pred_lr)
+acc_lr_train = lr.score(X_train, y_train)
 
-print(f"Accuracy Score of Logistic Regression is : {acc_lr}")
-print(f"Confusion Matrix : \n{conf}")
-print(f"Classification Report : \n{clf_report}")
+show_cmatrix(y_test, y_pred_lr)
 
 #%%
 print('\n____________ KNeighborsClassifier ____________')
@@ -170,72 +220,133 @@ knn.fit(X_train, y_train)
 
 y_pred_knn = knn.predict(X_test)
 
+eval_prediction(knn, y_pred_lr, X_train, y_train, X_test, y_test)
+
+print('Train score: ' + str(knn.score(X_train, y_train))) #accuracy
+print('Test score:' + str(knn.score(X_test, y_test))) #accuracy
+
+show_cmatrix(y_test, y_pred_knn)
+
+recall_knn = recall_score(y_test, y_pred_knn)
 acc_knn = accuracy_score(y_test, y_pred_knn)
-conf = confusion_matrix(y_test, y_pred_knn)
-clf_report = classification_report(y_test, y_pred_knn)
+precision_knn = precision_score(y_test, y_pred_knn)
+f1_knn = f1_score(y_test, y_pred_knn)
+acc_knn_train = knn.score(X_train, y_train)
 
-print(f"Accuracy Score of KNN is : {acc_knn}")
-print(f"Confusion Matrix : \n{conf}")
-print(f"Classification Report : \n{clf_report}")
-
-#%%
 print('\n____________ Decision Tree Classifier ____________')
+dt_model = DecisionTreeClassifier()
+dt_model.fit(X_train,y_train)
+y_pred_dt = dt_model.predict(X_test)
 
-dtc = DecisionTreeClassifier()
-dtc.fit(X_train, y_train)
+eval_prediction(dt_model, y_pred_dt, X_train, y_train, X_test, y_test)
 
-y_pred_dtc = dtc.predict(X_test)
 
-acc_dtc = accuracy_score(y_test, y_pred_dtc)
-conf = confusion_matrix(y_test, y_pred_dtc)
-clf_report = classification_report(y_test, y_pred_dtc)
+print('Train score: ' + str(dt_model.score(X_train, y_train))) #accuracy
+print('Test score:' + str(dt_model.score(X_test, y_test))) #accuracy
 
-print(f"Accuracy Score of Decision Tree is : {acc_dtc}")
-print(f"Confusion Matrix : \n{conf}")
-print(f"Classification Report : \n{clf_report}")
+recall_dt = recall_score(y_test, y_pred_dt)
+acc_dt = accuracy_score(y_test, y_pred_dt)
+precision_dt = precision_score(y_test, y_pred_dt)
+f1_dt = f1_score(y_test, y_pred_dt)
+acc_dt_train = dt_model.score(X_train, y_train)
 
-#%%
+show_cmatrix(y_test,y_pred_dt)
 print('\n____________ Random Forest Classifier ____________')
-rd_clf = RandomForestClassifier()
-rd_clf.fit(X_train, y_train)
+rf_model = RandomForestClassifier()
+rf_model.fit(X_train,y_train)
+y_pred_rf = rf_model.predict(X_test)
 
-y_pred_rd_clf = rd_clf.predict(X_test)
+eval_prediction(rf_model, y_pred_rf, X_train, y_train, X_test, y_test)
 
-acc_rd_clf = accuracy_score(y_test, y_pred_rd_clf)
-conf = confusion_matrix(y_test, y_pred_rd_clf)
-clf_report = classification_report(y_test, y_pred_rd_clf)
+print('Train score: ' + str(rf_model.score(X_train, y_train))) #accuracy
+print('Test score:' + str(rf_model.score(X_test, y_test))) #accuracy
 
-print(f"Accuracy Score of Random Forest is : {acc_rd_clf}")
-print(f"Confusion Matrix : \n{conf}")
-print(f"Classification Report : \n{clf_report}")
+recall_rf = recall_score(y_test, y_pred_rf)
+acc_rf = accuracy_score(y_test, y_pred_rf)
+precision_rf = precision_score(y_test, y_pred_rf)
+f1_rf = f1_score(y_test, y_pred_rf)
+acc_rf_train = rf_model.score(X_train, y_train)
 
-#%%
+show_cmatrix(y_test, y_pred_rf)
+
 print('\n____________ Gradient Boosting Classifier ____________')
 gb = GradientBoostingClassifier()
 gb.fit(X_train, y_train)
 
 y_pred_gb = gb.predict(X_test)
 
-acc_gb = accuracy_score(y_test, y_pred_gb)
-conf = confusion_matrix(y_test, y_pred_gb)
-clf_report = classification_report(y_test, y_pred_gb)
+eval_prediction(gb, y_pred_gb, X_train, y_train, X_test, y_test)
 
-print(f"Accuracy Score of Ada Boost Classifier is : {acc_gb}")
-print(f"Confusion Matrix : \n{conf}")
-print(f"Classification Report : \n{clf_report}")
+recall_gb = recall_score(y_test, y_pred_gb)
+acc_gb = accuracy_score(y_test, y_pred_gb)
+precision_gb = precision_score(y_test, y_pred_gb)
+f1_gb = f1_score(y_test, y_pred_gb)
+acc_gb_train = gb.score(X_train, y_train)
+
+
+evaluation_summary = {
+    'Logistic Regression': [acc_lr, recall_lr, precision_lr, f1_lr],
+    'KNN':[acc_knn, recall_knn, precision_knn, f1_knn],
+    'Decision Tree':[acc_dt, recall_dt, precision_dt, f1_dt],
+    'Random Forest':[acc_rf, recall_rf, precision_rf, f1_rf],
+    'Gradient Boosting':[acc_gb, recall_gb, precision_gb, f1_gb]
+}
+
+eva_sum = pd.DataFrame(data = evaluation_summary, index = ['Accuracy', 'Recall', 'Precision', 'F1 Score'])
+eva_sum
+
+# tính toán accuracy của train và test
+evaluation_sum_train_test = {
+    "Train" : [acc_lr_train, acc_knn_train, acc_dt_train, acc_rf_train, acc_xg_train],
+    "Test": [acc_lr, acc_knn, acc_dt, acc_rf, acc_xg]
+}
+
+eva_sum_train_test = pd.DataFrame(data = evaluation_sum_train_test, index = ['Logistic Regression', 'KNN', 'Decision Tree', 'Random Forest', 'XGBoost'])
+eva_sum_train_test
+
+
 
 #%%
-print('\n____________ Models Comparison ____________')
-models = pd.DataFrame({
-    'Model' : ['Logistic Regression', 'KNN', 'Decision Tree Classifier', 'Random Forest Classifier',
-             'Gradient Boosting Classifier'
-               ],
-    'Score' : [acc_lr, acc_knn, acc_dtc, acc_rd_clf, acc_gb]
-})
+print('\n____________ Tuned Modelling ____________')
+
+#%%
+print('\n____________ Logistic Regression Tuned ____________')
+from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
+
+penalty = ['l2','l1','elasticnet']
+C = [0.0001, 0.001, 0.002] # Inverse of regularization strength; smaller values specify stronger regularization.
+hyperparameters = dict(penalty=penalty, C=C)
+
+lr_tuned = LogisticRegression()
+lr_tuned_model = RandomizedSearchCV(lr_tuned, hyperparameters, cv=5, scoring='accuracy')
+lr_tuned_model.fit(X_train, y_train)
+
+y_pred_lr_tuned = lr_tuned_model.predict(X_test)
+
+show_best_hyperparameter(lr_tuned_model.best_estimator_, hyperparameters)
+
+eval_prediction(lr_tuned_model, y_pred_lr_tuned, X_train, y_train, X_test, y_test)
+
+print('Train score: ' + str(lr_tuned_model.score(X_train, y_train))) #accuracy
+print('Test score:' + str(lr_tuned_model.score(X_test, y_test))) #accuracy
+
+recall_lr_tuned = recall_score(y_test, y_pred_lr_tuned)
+acc_lr_tuned = accuracy_score(y_test, y_pred_lr_tuned)
+precision_lr_tuned = precision_score(y_test, y_pred_lr_tuned)
+f1_lr_tuned = f1_score(y_test, y_pred_lr_tuned)
+acc_lr_tuned_train = lr_tuned_model.score(X_train, y_train)
+
+#%%
+print('\n____________ KNeighborsClassifier ____________')
 
 
-models.sort_values(by = 'Score', ascending = False)
+#%%
+print('\n____________ Decision Tree Classifier ____________')
 
-px.bar(data_frame = models, x = 'Score', y = 'Model', color = 'Score', template = 'plotly_dark', title = 'Models Comparison')
 
-# We got accuracy score of 95% which is quite impresive.
+#%%
+print('\n____________ Random Forest Classifier ____________')
+
+#%%
+print('\n____________ Gradient Boosting Classifier ____________')
+
