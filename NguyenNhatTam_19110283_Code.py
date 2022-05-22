@@ -3,7 +3,7 @@
 The dataset get from Kaggle
 https://www.kaggle.com/datasets/mojtaba142/hotel-booking?datasetId=1437463&searchQuery=predict
 
-The following code is mainly from Kaggle
+The following code is mainly from niteshyadav3103 on Kaggle
 https://www.kaggle.com/code/niteshyadav3103/hotel-booking-prediction-99-5-acc/notebook
 
 '''
