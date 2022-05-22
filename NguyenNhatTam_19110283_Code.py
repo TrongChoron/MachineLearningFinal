@@ -36,7 +36,7 @@ pd.set_option('display.max_row', 36)
 #%%%
 # Data set này mô tả chứa 119390 observations về City Hotel and Resort Hotel 
 # Mỗi observation đại diện cho một hotel booking, bao gồm các đặt phòng đã đến và bị hủy
-df = pd.read_csv('hotel_bookings.csv')
+df = pd.read_csv('NguyenNhatTam_19110283_Data.csv')
 print('\n____________ Dataset info ____________')
 print(df.info())
 print('\n____________ Some first data examples ____________')
